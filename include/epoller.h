@@ -18,28 +18,28 @@ namespace netco
 
 		DISALLOW_COPY_MOVE_AND_ASSIGN(Epoller);
 
-		//ÒªÊ¹ÓÃEventEpoller±ØĞëµ÷ÓÃ¸Ãº¯Êı³õÊ¼»¯£¬Ê§°ÜÔò·µ»Øfalse
+		//è¦ä½¿ç”¨EventEpollerå¿…é¡»è°ƒç”¨è¯¥å‡½æ•°åˆå§‹åŒ–ï¼Œå¤±è´¥åˆ™è¿”å›false
 		bool init();
 
-		//ĞŞ¸ÄEpollerÖĞµÄÊÂ¼ş
+		//ä¿®æ”¹Epollerä¸­çš„äº‹ä»¶
 		bool modifyEv(Coroutine* pCo, int fd, int interesEv);
 
-		//ÏòEpollerÖĞÌí¼ÓÊÂ¼ş
+		//å‘Epollerä¸­æ·»åŠ äº‹ä»¶
 		bool addEv(Coroutine* pCo, int fd, int interesEv);
 
-		//´ÓEpollerÖĞÒÆ³ıÊÂ¼ş
+		//ä»Epollerä¸­ç§»é™¤äº‹ä»¶
 		bool removeEv(Coroutine* pCo, int fd, int interesEv);
 
-		//»ñÈ¡±»¼¤»îµÄÊÂ¼ş·şÎñ,·µ»Øerrno
+		//è·å–è¢«æ¿€æ´»çš„äº‹ä»¶æœåŠ¡,è¿”å›errno
 		int getActEvServ(int timeOutMs, std::vector<Coroutine*>& activeEvServs);
 
 	private:
 
 		inline bool isEpollFdUseful() { return epollFd_ < 0 ? false : true; };
 
-		int epollFd_;
+		int epollFd_; // epollæ–‡ä»¶æè¿°ç¬¦
 
-		std::vector<struct epoll_event> activeEpollEvents_;
+		std::vector<struct epoll_event> activeEpollEvents_; // epolläº‹ä»¶æ•°ç»„
 
 	};
 

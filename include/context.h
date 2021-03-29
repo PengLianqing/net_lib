@@ -24,16 +24,16 @@ namespace netco
 
 		Context& operator=(const Context& otherCtx) = delete;
 
-		//用函数指针设置当前context的上下文入口
+		//鐢ㄥ嚱鏁版寚閽堣缃綋鍓峜ontext鐨勪笂涓嬫枃鍏ュ彛
 		void makeContext(void (*func)(), Processor*, Context*);
 
-		//直接用当前程序状态设置当前context的上下文
+		//鐩存帴鐢ㄥ綋鍓嶇▼搴忕姸鎬佽缃綋鍓峜ontext鐨勪笂涓嬫枃
 		void makeCurContext();
 
-		//将当前上下文保存到oldCtx中，然后切换到当前上下文，若oldCtx为空，则直接运行
+		//灏嗗綋鍓嶄笂涓嬫枃淇濆瓨鍒皁ldCtx涓紝鐒跺悗鍒囨崲鍒板綋鍓嶄笂涓嬫枃锛岃嫢oldCtx涓虹┖锛屽垯鐩存帴杩愯
 		void swapToMe(Context* pOldCtx);
 
-		//获取当前上下文的ucontext_t指针
+		//鑾峰彇褰撳墠涓婁笅鏂囩殑ucontext_t鎸囬拡
 		inline struct ucontext_t* getUCtx() { return &ctx_; };
 
 	private:

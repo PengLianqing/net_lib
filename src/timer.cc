@@ -35,12 +35,13 @@ bool Timer::init(Epoller* pEpoller)
 void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 {
 	Time nowTime = Time::now();
+	// 将超时的事件弹出
 	while (!timerCoHeap_.empty() && timerCoHeap_.top().first <= nowTime)
 	{
 		expiredCoroutines.push_back(timerCoHeap_.top().second);
 		timerCoHeap_.pop();
 	}
-
+	// 读完timeFd_来到的数据（epoll水平触发）
 	if (!expiredCoroutines.empty())
 	{
 		ssize_t cnt = TIMER_DUMMYBUF_SIZE;
@@ -49,7 +50,7 @@ void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 			cnt = ::read(timeFd_, dummyBuf_, TIMER_DUMMYBUF_SIZE);
 		}
 	}
-
+	// 更新定时器
 	if (!timerCoHeap_.empty())
 	{
 		Time time = timerCoHeap_.top().first;
@@ -61,7 +62,7 @@ void Timer::runAt(Time time, Coroutine* pCo)
 {
 	timerCoHeap_.push(std::move(std::pair<Time, Coroutine*>(time, pCo)));
 	if (timerCoHeap_.top().first == time)
-	{//新加入的任务是最紧急的任务则需要更改timefd所设置的时间
+	{//如果新加入的任务是最紧急的任务则需要更改timefd所设置的时间
 		resetTimeOfTimefd(time);
 	}
 }

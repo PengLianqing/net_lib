@@ -24,6 +24,9 @@ Epoller::~Epoller()
 
 bool Epoller::init()
 {
+	// epoll_create1() 使用FD_CLOEXEC实现close-on-exec，关闭子进程无用文件描述符
+	// 即设置该epoll描述符的close-on-exec(FD_CLOEXEC)标志。
+	// https://blog.csdn.net/ChrisNiu1984/article/details/7050663
 	epollFd_ = ::epoll_create1(EPOLL_CLOEXEC);
 	return isEpollFdUseful();
 }

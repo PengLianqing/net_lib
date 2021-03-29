@@ -27,11 +27,11 @@ namespace netco
 		Processor* next();
 
 	private:
-		int curPro_;
+		int curPro_; // 事件管理器数组的下标
 
-		int strategy_;
+		int strategy_; // 分发任务的策略
 
-		std::vector<Processor*>& processors_;
+		std::vector<Processor*>& processors_; // Processor对象数组
 
 	};
 
