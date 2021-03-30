@@ -109,20 +109,25 @@ void multi_acceptor_server_test()
 
 //作为客户端的测试，可配合上述server测试
 void client_test(){
-	netco::co_go(
+	for (int i = 0; i < 50; ++i){
+		netco::co_go(
 				[]
 				{
 					char buf[1024];
-					while(1){
-						netco::co_sleep(2000);
+					int j = 2000;
+					while(--j>0){
+						netco::co_sleep(1);
 						netco::Socket s;
 						s.connect("127.0.0.1", 8099);
 						s.send("ping", 4);
 						s.read(buf, 1024);
-						std::cout << std::string(buf) << std::endl;
+						// std::cout << std::string(buf) << std::endl;
 					}
+					std::cout << "all done." << std::endl;
 				}
 				);
+	}
+	std::cout<<"client done."<<std::endl;
 }
 
 //读写锁测试
@@ -166,10 +171,11 @@ int main()
 {
 	//netco::RWMutex mu;
 	//mutex_test(mu);
-	single_acceptor_server_test();
+	//single_acceptor_server_test();
 	//multi_acceptor_server_test();
-	//client_test();
-	netco::sche_join();
+	client_test();
+	std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
+	//netco::sche_join();
 	std::cout << "end" << std::endl;
 	return 0;
 }
