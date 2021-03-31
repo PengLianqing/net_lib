@@ -74,6 +74,7 @@ multi_acceptor_server_test函数执行逻辑：
 
 首先测试协程返回
 */
+std::atomic_int32_t times(0);
 void multi_acceptor_server_test()
 {
 	auto tCnt = ::get_nprocs_conf(); // 获取核心数
@@ -82,7 +83,6 @@ void multi_acceptor_server_test()
 		netco::co_go(
 			[]
 			{
-				static int times = 0;
 				netco::Socket listener;
 				if (listener.isUseful())
 				{
@@ -112,12 +112,14 @@ void multi_acceptor_server_test()
 							char buf[1024];
 							if (conn->read((void*)buf, 1024) > 0)
 							{
-								times ++;
 								netco::co_sleep( rand()%1000 ); // 稍后回复
 								conn->send(hello.c_str(), hello.size());
 								netco::co_sleep(50);//需要等一下，否则还没发送完毕就关闭了
 							}
-							std::cout << j << "done" << times << std::endl;
+
+							times.fetch_add(1);
+
+							std::cout << j << "done" << times.load() << std::endl;
 							delete conn;
 						}
 					);

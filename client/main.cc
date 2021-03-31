@@ -7,37 +7,46 @@
 #include "../include/socket.h"
 #include "../include/mutex.h"
 
+#include <atomic>
+
 using namespace netco;
 
 // export LD_LIBRARY_PATH=/home/peng/Share/myprj/openSourcePrj/netco/src/
 // export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
 // ./netco_test -lnetco
 
-//作为客户端的测试，可配合上述server测试
+// 客户端
+// 使用四线程+协程调度测试服务器性能
+std::atomic_int32_t times(0);
 void client_test(){
-	netco::co_go(
-		[]{
-			for (int i = 0; i < 1; ++i){
+	for(int i=0;i<4;++i){
+		netco::co_go(
+		[i]{
+			for (int j = 0; j < 1000; ++j){
 				netco::co_go(
-						[ i ]
-						{
-							char buf[1024];
-							int j = 10;
-							while(j-->0){
-								std::cout<<j<<std::endl; // 协程的第j个连接
-								netco::co_sleep(1); // 协程切换
-								netco::Socket s;
-								s.connect("127.0.0.1", 7103);
-								s.send("ping", 4);
-								s.read(buf, 1024);
-								// std::cout << std::string(buf) << std::endl;
-							}
-						} 
-				// );
-				,parameter::coroutineStackSize, i);
+					[ j ]
+					{
+						char buf[1024];
+						// std::cout<<j<<std::endl; // 协程的第j个连接
+						netco::co_sleep(1); // 协程切换
+						netco::Socket s;
+						s.connect("127.0.0.1", 7103);
+						s.send("ping", 4);
+						s.read(buf, 1024);
+						times.fetch_add(1);
+						std::cout<<times.load()<<std::endl;
+					} 
+				);
 			}
 		}
-		);
+		,parameter::coroutineStackSize, i);
+	}
+
+	while( times.load()<4000 )
+	{
+		::usleep(10);
+	}
+	std::cout  << "all done. times:" << times.load() << std::endl;
 }
 
 /*
@@ -48,7 +57,7 @@ int main()
 {
 	client_test();
 	// std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
-	netco::sche_join();
+	// netco::sche_join();
 	std::cout << "end" << std::endl;
 	return 0;
 }
