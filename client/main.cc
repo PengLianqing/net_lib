@@ -22,7 +22,7 @@ void client_test(){
 	for(int i=0;i<4;++i){
 		netco::co_go(
 		[i]{
-			for (int j = 0; j < 1000; ++j){
+			for (int j = 0; j < 10000; ++j){
 				netco::co_go(
 					[ j ]
 					{
@@ -33,8 +33,9 @@ void client_test(){
 						s.connect("127.0.0.1", 7103);
 						s.send("ping", 4);
 						s.read(buf, 1024);
+						
 						times.fetch_add(1);
-						std::cout<<times.load()<<std::endl;
+						// std::cout<<times.load()<<std::endl;
 					} 
 				);
 			}
@@ -42,9 +43,9 @@ void client_test(){
 		,parameter::coroutineStackSize, i);
 	}
 
-	while( times.load()<4000 )
+	while( times.load()<40000 )
 	{
-		::usleep(10);
+		::sleep(0);
 	}
 	std::cout  << "all done. times:" << times.load() << std::endl;
 }
@@ -58,6 +59,6 @@ int main()
 	client_test();
 	// std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
 	// netco::sche_join();
-	std::cout << "end" << std::endl;
+	// std::cout << "end" << std::endl;
 	return 0;
 }

@@ -105,7 +105,7 @@ void multi_acceptor_server_test()
 					netco::co_go(
 						[conn,j]
 						{
-							std::cout << j << "start" << std::endl;
+							// std::cout << j << "start" << std::endl;
 							// 所谓的此处重复执行是指多线程重复了
 							std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
@@ -119,7 +119,7 @@ void multi_acceptor_server_test()
 
 							times.fetch_add(1);
 
-							std::cout << j << "done" << times.load() << std::endl;
+							// std::cout << j << "done" << times.load() << std::endl;
 							delete conn;
 						}
 					);
@@ -127,7 +127,6 @@ void multi_acceptor_server_test()
 			}
 			,parameter::coroutineStackSize, i);
 	}
-	std::cout << "#########return " << std::endl;
 }
 
 int main()
@@ -135,6 +134,6 @@ int main()
 	// single_acceptor_server_test();
 	multi_acceptor_server_test();
 	netco::sche_join();
-	std::cout << "end" << std::endl;
+	// std::cout << "end" << std::endl;
 	return 0;
 }
