@@ -12,7 +12,7 @@ using namespace netco;
 // export LD_LIBRARY_PATH=/home/peng/Share/myprj/openSourcePrj/netco/src/
 // export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
 // ./netco_test -lnetco
-
+std::atomic_int32_t times(0);
 // netco http response with one acceptor test 
 // 只有一个acceptor的服务
 void single_acceptor_server_test()
@@ -25,37 +25,36 @@ void single_acceptor_server_test()
 				listener.setTcpNoDelay(true); // 设置socket的tcp协议不使用Nagle算法
 				listener.setReuseAddr(true); // 地址、端口复用
 				listener.setReusePort(true);
-				if (listener.bind(8099) < 0) // 绑定地址结构
+				if (listener.bind(7103) < 0) // 绑定地址结构
 				{
 					return;
 				}
 				listener.listen(); // 监听
 			}
-			while (1){
-				netco::Socket* conn = new netco::Socket(listener.accept()); // 接收连接
-				conn->setTcpNoDelay(true); // 设置新的socket的tcp协议不使用Nagle算法
-				netco::co_go( // 协程 执行通信
+			while(true)
+			{
+				netco::Socket* conn = new netco::Socket(listener.accept());
+				conn->setTcpNoDelay(true);
+				netco::co_go(
 					[conn]
 					{
-						std::vector<char> buf;
-						buf.resize(2048);
-						while (1)
+						std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+						// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+						char buf[1024];
+						int i = 0;
+						while (conn->read((void*)buf, 1024) > 0)
 						{
-							auto readNum = conn->read((void*)&(buf[0]), buf.size());
-							std::string ok = "HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Type: text/html\r\n\r\n";
-							if(readNum < 0){
-								break;
-							}
-							conn->send(ok.c_str(), ok.size());
-							conn->send((void*)&(buf[0]), readNum);
-							if(readNum < (int)buf.size()){
-								break;
-							}
+							++i;
+							// netco::co_sleep( rand()%1000 ); // 稍后回复
+							conn->send(hello.c_str(), hello.size());
+							netco::co_sleep(50);//需要等一下，否则还没发送完毕就关闭了
 						}
-						netco::co_sleep(100);//需要等一下，否则还没发送完毕就关闭了
+
+						times.fetch_add(1);
+						// std::cout << "connections:" << i << std::endl;
 						delete conn;
 					}
-					);
+				);
 			}
 		}
 	);
@@ -74,11 +73,11 @@ multi_acceptor_server_test函数执行逻辑：
 
 首先测试协程返回
 */
-std::atomic_int32_t times(0);
 void multi_acceptor_server_test()
 {
 	auto tCnt = ::get_nprocs_conf(); // 获取核心数
-	for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
+	// for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
+	for (int i = 0; i < 4; ++i) // 使用四线程测试
 	{
 		netco::co_go(
 			[]
@@ -95,31 +94,27 @@ void multi_acceptor_server_test()
 					}
 					listener.listen();
 				}
-				int j = 0;
-				// while ( j-->0 )
 				while(true)
 				{
 					netco::Socket* conn = new netco::Socket(listener.accept());
 					conn->setTcpNoDelay(true);
-					++j;
 					netco::co_go(
-						[conn,j]
+						[conn]
 						{
-							// std::cout << j << "start" << std::endl;
-							// 所谓的此处重复执行是指多线程重复了
 							std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							char buf[1024];
-							if (conn->read((void*)buf, 1024) > 0)
+							int i = 0;
+							while (conn->read((void*)buf, 1024) > 0)
 							{
-								netco::co_sleep( rand()%1000 ); // 稍后回复
+								++i;
+								// netco::co_sleep( rand()%1000 ); // 稍后回复
 								conn->send(hello.c_str(), hello.size());
 								netco::co_sleep(50);//需要等一下，否则还没发送完毕就关闭了
 							}
 
 							times.fetch_add(1);
-
-							// std::cout << j << "done" << times.load() << std::endl;
+							// std::cout << "connections:" << i << std::endl;
 							delete conn;
 						}
 					);
@@ -129,10 +124,26 @@ void multi_acceptor_server_test()
 	}
 }
 
+/*
+单线程与多线程性能差距：
+测试场景：20000个连接，每个连接进行50次"ping"操作
+peng@ubuntu:~/code/net_lib/client$ time ./client 
+all done. times:20000
+
+real    0m8.604s
+user    0m2.016s
+sys     0m16.169s
+peng@ubuntu:~/code/net_lib/client$ time ./client 
+all done. times:20000
+
+real    0m17.610s
+user    0m6.888s
+sys     0m27.837s
+*/
 int main()
 {
-	// single_acceptor_server_test();
-	multi_acceptor_server_test();
+	single_acceptor_server_test();
+	// multi_acceptor_server_test();
 	netco::sche_join();
 	// std::cout << "end" << std::endl;
 	return 0;
