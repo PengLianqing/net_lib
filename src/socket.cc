@@ -1,4 +1,18 @@
-//@Author Liu Yukang 
+/**
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  * @file       socket.c/h
+  * @brief      
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Jan-1-2021      Peng            1. 完成
+  *
+  @verbatim
+  ==============================================================================
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  */ 
 #include "../include/socket.h"
 #include "../include/scheduler.h"
 

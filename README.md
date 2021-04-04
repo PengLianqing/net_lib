@@ -1,3 +1,9 @@
+# 存在的问题：
+1) 不能正确回收线程
+2) 协程封装问题
+3) 初始化accept会导致cpu占用率过高，需优化
+4) 发送与delete问题
+
 # net_lib
 net lib by cpp
 

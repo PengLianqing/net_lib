@@ -1,4 +1,18 @@
-//@author Liu Yukang
+/**
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  * @file       netco_api.c/h
+  * @brief      
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Jan-1-2021      Peng            1. 完成
+  *
+  @verbatim
+  ==============================================================================
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  */
 #include "../include/netco_api.h"
 
 void netco::co_go(std::function<void()>&& func, size_t stackSize, int tid)

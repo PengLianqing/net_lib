@@ -1,3 +1,18 @@
+/**
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  * @file       server.c/h
+  * @brief      使用：export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Jan-1-2021      Peng            1. 完成
+  *
+  @verbatim
+  ==============================================================================
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  */
 #include <iostream>
 #include <sys/sysinfo.h>
 
@@ -8,10 +23,6 @@
 
 using namespace netco;
 
-// 运行
-// export LD_LIBRARY_PATH=/home/peng/Share/myprj/openSourcePrj/netco/src/
-// export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
-// ./netco_test -lnetco
 std::atomic_int32_t times(0);
 // netco http response with one acceptor test 
 // 只有一个acceptor的服务
@@ -31,28 +42,44 @@ void single_acceptor_server_test()
 				}
 				listener.listen(); // 监听
 			}
+			netco::co_go(
+					[]
+					{
+						while(true){
+							std::cout << "connections:" << times.load() << std::endl;
+							netco::co_sleep(200);
+						}
+					}
+			);
 			while(true)
 			{
 				netco::Socket* conn = new netco::Socket(listener.accept());
 				conn->setTcpNoDelay(true);
+				times.fetch_add(1);
 				netco::co_go(
 					[conn]
 					{
 						std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						char buf[1024];
+						/*
 						int i = 0;
 						while (conn->read((void*)buf, 1024) > 0)
 						{
 							++i;
 							// netco::co_sleep( rand()%1000 ); // 稍后回复
 							conn->send(hello.c_str(), hello.size());
-							netco::co_sleep(50);//需要等一下，否则还没发送完毕就关闭了
+							netco::co_sleep(0);
+							// std::cout << "messages:" << i << std::endl;
 						}
-
-						times.fetch_add(1);
-						// std::cout << "connections:" << i << std::endl;
+						*/
+						if (conn->read((void*)buf, 1024) > 0)
+						{
+							conn->send(hello.c_str(), hello.size());
+							netco::co_sleep(50); // 等待，防止提前关闭socket
+						}
 						delete conn;
+						times.fetch_sub(1);
 					}
 				);
 			}
@@ -94,28 +121,44 @@ void multi_acceptor_server_test()
 					}
 					listener.listen();
 				}
+				netco::co_go(
+					[]
+					{
+						while(true){
+							std::cout << "connections:" << times.load() << std::endl;
+							netco::co_sleep(200);
+						}
+					}
+				);
 				while(true)
 				{
 					netco::Socket* conn = new netco::Socket(listener.accept());
 					conn->setTcpNoDelay(true);
+					times.fetch_add(1);
 					netco::co_go(
 						[conn]
 						{
 							std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							char buf[1024];
+							/*
 							int i = 0;
 							while (conn->read((void*)buf, 1024) > 0)
 							{
 								++i;
 								// netco::co_sleep( rand()%1000 ); // 稍后回复
 								conn->send(hello.c_str(), hello.size());
-								netco::co_sleep(50);//需要等一下，否则还没发送完毕就关闭了
+								netco::co_sleep(0);
+								// std::cout << "messages:" << i << std::endl;
 							}
-
-							times.fetch_add(1);
-							// std::cout << "connections:" << i << std::endl;
+							*/
+							if (conn->read((void*)buf, 1024) > 0)
+							{
+								conn->send(hello.c_str(), hello.size());
+								netco::co_sleep(50); // 等待，防止提前关闭socket
+							}
 							delete conn;
+							times.fetch_sub(1);
 						}
 					);
 				}
@@ -142,8 +185,8 @@ sys     0m27.837s
 */
 int main()
 {
-	single_acceptor_server_test();
-	// multi_acceptor_server_test();
+	// single_acceptor_server_test();
+	multi_acceptor_server_test();
 	netco::sche_join();
 	// std::cout << "end" << std::endl;
 	return 0;

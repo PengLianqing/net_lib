@@ -1,4 +1,18 @@
-//@author Liu Yukang
+/**
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  * @file       client.c/h
+  * @brief      使用方法：export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Jan-1-2021      Peng            1. 完成
+  *
+  @verbatim
+  ==============================================================================
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  */
 #include <iostream>
 #include <sys/sysinfo.h>
 
@@ -11,12 +25,10 @@
 
 using namespace netco;
 
-// export LD_LIBRARY_PATH=/home/peng/Share/myprj/openSourcePrj/netco/src/
-// export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
-// ./netco_test -lnetco
-
-// 客户端
-// 使用四线程+协程调度测试服务器性能
+/**
+  * @brief          client_test
+  * 使用四线程+协程调度测试服务器端性能
+  */
 std::atomic_int32_t times(0);
 void client_test(){
 	for(int i=0;i<2;++i){
@@ -53,15 +65,12 @@ void client_test(){
 	std::cout  << "all done. times:" << times.load() << std::endl;
 }
 
-/*
-问题出在不能回收线程
-不存在协程前部分执行出错的情况
-*/
+
 int main()
 {
 	client_test();
 	// std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
 	// netco::sche_join();
-	// std::cout << "end" << std::endl;
+	std::cout << "end" << std::endl;
 	return 0;
 }

@@ -1,4 +1,18 @@
-//@author Liu Yukang
+/**
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  * @file       context.c/h
+  * @brief      上下文切换实现,基于ucontext实现
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Jan-1-2021      Peng            1. 完成
+  *
+  @verbatim
+  ==============================================================================
+  ==============================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2021 Peng****************************
+  */
 #pragma once
 #include "utils.h"
 #include "parameter.h"
