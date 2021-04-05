@@ -20,7 +20,7 @@
 
 struct epoll_event;
 
-namespace netco
+namespace copnet
 {
 	class Coroutine;
 

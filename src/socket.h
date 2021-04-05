@@ -26,7 +26,7 @@
 
 struct tcp_info;
 
-namespace netco {
+namespace copnet {
 
 	//Socket类，创建的Socket对象默认都是非阻塞的
 	//职责：

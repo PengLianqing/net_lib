@@ -27,7 +27,7 @@
 
 extern __thread int threadIdx;
 
-namespace netco
+namespace copnet
 {
 	enum processerStatus
 	{

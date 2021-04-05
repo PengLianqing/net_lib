@@ -13,11 +13,11 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/scheduler.h"
+#include "scheduler.h"
 
 #include <sys/sysinfo.h>
 
-using namespace netco;
+using namespace copnet;
 
 Scheduler* Scheduler::pScher_ = nullptr;
 std::mutex Scheduler::scherMtx_;

@@ -13,10 +13,10 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/mstime.h"
+#include "mstime.h"
 #include <sys/time.h>
 
-using namespace netco;
+using namespace copnet;
 
 Time Time::now()
 {

@@ -16,7 +16,7 @@
 #pragma once
 #include <stddef.h>
 
-namespace netco
+namespace copnet
 {
 	namespace parameter
 	{

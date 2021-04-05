@@ -18,7 +18,7 @@
 #include "context.h"
 #include "utils.h"
 
-namespace netco
+namespace copnet
 {
 
 	enum coStatus

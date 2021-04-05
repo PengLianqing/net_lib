@@ -13,8 +13,8 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */ 
-#include "../include/socket.h"
-#include "../include/scheduler.h"
+#include "socket.h"
+#include "scheduler.h"
 
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -24,7 +24,7 @@
 #include <string.h>
 #include <sys/epoll.h>
 
-using namespace netco;
+using namespace copnet;
 
 Socket::~Socket()
 {
@@ -135,7 +135,7 @@ Socket Socket::accept(){
 	if(ret.isUseful()){
 		return ret;
 	}
-	netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
+	copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
 	auto con(accept_raw());
 	if(con.isUseful()){
 		return con;
@@ -153,7 +153,7 @@ ssize_t Socket::read(void* buf, size_t count)
 	if(ret == -1 && errno == EINTR){
 		return read(buf, count);
 	}
-	netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
+	copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLIN | EPOLLPRI | EPOLLRDHUP | EPOLLHUP);
 	return ::read(_sockfd, buf, count);
 }
 
@@ -171,7 +171,7 @@ void Socket::connect(const char* ip, int port){
 	if(ret == -1 && errno == EINTR){
 		return connect(ip, port);
 	}
-	netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLOUT);
+	copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLOUT);
 	return connect(ip, port);
 }
 
@@ -183,7 +183,7 @@ ssize_t Socket::send(const void* buf, size_t count)
 	if (sendIdx >= count){
 		return count;
 	}
-	netco::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLOUT);
+	copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->waitEvent(_sockfd, EPOLLOUT);
 	return send((char *)buf + sendIdx, count - sendIdx);
 }
 

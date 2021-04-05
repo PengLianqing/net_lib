@@ -20,7 +20,7 @@
 #include "processor.h"
 #include "processor_selector.h"
 
-namespace netco
+namespace copnet
 {
 
 	class Scheduler

@@ -13,16 +13,16 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/epoller.h"
-#include "../include/coroutine.h"
-#include "../include/parameter.h"
+#include "epoller.h"
+#include "coroutine.h"
+#include "parameter.h"
 
 #include <string.h>
 #include <errno.h>
 #include <sys/epoll.h>
 #include <unistd.h>
 
-using namespace netco;
+using namespace copnet;
 
 Epoller::Epoller()
 	: epollFd_(-1), activeEpollEvents_(parameter::epollerListFirstSize)

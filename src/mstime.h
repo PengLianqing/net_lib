@@ -19,7 +19,7 @@
 
 struct timespec;
 
-namespace netco
+namespace copnet
 {
 
 	//一年中每个月的天数，非闰年

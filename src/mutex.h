@@ -20,7 +20,7 @@
 #include <atomic>
 #include <queue>
 
-namespace netco{
+namespace copnet{
 
     enum muStatus
 	{

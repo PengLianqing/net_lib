@@ -13,10 +13,10 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/processor_selector.h"
-#include "../include/processor.h"
+#include "processor_selector.h"
+#include "processor.h"
 
-using namespace netco;
+using namespace copnet;
 
 Processor* ProcessorSelector::next()
 {

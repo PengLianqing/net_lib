@@ -13,16 +13,16 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/timer.h"
-#include "../include/coroutine.h"
-#include "../include/epoller.h"
+#include "timer.h"
+#include "coroutine.h"
+#include "epoller.h"
 
 #include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <string.h>
 #include <unistd.h>
 
-using namespace netco;
+using namespace copnet;
 
 Timer::Timer()
 	: timeFd_(-1)

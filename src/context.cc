@@ -13,11 +13,11 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/context.h"
-#include "../include/parameter.h"
+#include "context.h"
+#include "parameter.h"
 #include <stdlib.h>
 
-using namespace netco;
+using namespace copnet;
 
 Context::Context(size_t stackSize)
 	:pStack_(nullptr), stackSize_(stackSize)

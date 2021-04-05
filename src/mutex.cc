@@ -13,11 +13,11 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/mutex.h"
-#include "../include/scheduler.h"
-#include "../include/spinlock_guard.h"
+#include "mutex.h"
+#include "scheduler.h"
+#include "spinlock_guard.h"
 
-using namespace netco;
+using namespace copnet;
 
 void RWMutex::rlock(){
     // 成功获取到自旋锁，readingNum_+1

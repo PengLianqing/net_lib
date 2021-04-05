@@ -13,7 +13,7 @@ net lib by cpp
 = epoller.cc
 = mstime.cc
 = mutex.cc
-= netco_api.cc
+= copnet_api.cc
 = processor.cc
 = processor_selector.cc
 = scheduler.cc
@@ -27,7 +27,7 @@ net lib by cpp
 = utils.h
 ```
 
-### netco
+### copnet
 
 | source                | function       | addition                       |
 | :-------------------- | :------------- | :----------------------------- |
@@ -36,7 +36,7 @@ net lib by cpp
 | epoller.cc            | 封装epoll      | LT水平触发                     |
 | mstime.cc             | 时间           |                                |
 | mutex.cc              | 读写锁         | 通过原子变量和队列实现读写锁   |
-| netco_api.cc          | api            |                                |
+| copnet_api.cc          | api            |                                |
 | processor.cc          | 线程           | 存放协程对象并管理其生命周期   |  |
 | processor_selector.cc | 协程分配策略   |                                |
 | scheduler.cc          | 协程分配       | 将协程分配到线程               |
@@ -65,7 +65,7 @@ socket类封装ip地址、端口、引用计数；
 使用：
 服务器端：
 ```
-netco::Socket listener;
+copnet::Socket listener;
 if (listener.isUseful()) // 判断socket是否有效
 {
     listener.setTcpNoDelay(true); // 设置socket的tcp协议不使用Nagle算法
@@ -78,9 +78,9 @@ if (listener.isUseful()) // 判断socket是否有效
     listener.listen(); // 监听
 }
 while (1){
-    netco::Socket* conn = new netco::Socket(listener.accept()); // 接收连接
+    copnet::Socket* conn = new copnet::Socket(listener.accept()); // 接收连接
     conn->setTcpNoDelay(true); // 设置新的socket的tcp协议不使用Nagle算法
-    netco::co_go( // 协程 执行与客户端的通信
+    copnet::co_go( // 协程 执行与客户端的通信
         [conn]
         {
             std::vector<char> buf;
@@ -93,18 +93,18 @@ while (1){
                     break;
                 }
                 // send
-                std::string ok = "HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\n
+                std::string ok = "HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\n
 					Content-Type: text/html\r\n\r\n";
                 conn->send(ok.c_str(), ok.size());
                 conn->send((void*)&(buf[0]), readNum);
             }
-            netco::co_sleep(100);//需要等一下，否则还没发送完毕就关闭了
+            copnet::co_sleep(100);//需要等一下，否则还没发送完毕就关闭了
             delete conn; // 删除连接
         }
         );
 }
 ```
-### netco api
+### copnet api
 
 | function	| describe	| addition	|
 | :-	| :-	| :-	|
@@ -112,18 +112,18 @@ while (1){
 | co_sleep()	| 当前协程等待t毫秒后再继续执行	| 	|
 | sche_join()	| 等待调度器的结束	| 	|
 ```
-netco::co_go( []{} , parameter::coroutineStackSize, i ) 指定协程运行在i线程上，协程栈大小为coroutineStackSize
+copnet::co_go( []{} , parameter::coroutineStackSize, i ) 指定协程运行在i线程上，协程栈大小为coroutineStackSize
 
 co_go()调用
-netco::Scheduler::getScheduler()->createNewCo(func, stackSize);
-netco::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(func, stackSize);
+copnet::Scheduler::getScheduler()->createNewCo(func, stackSize);
+copnet::Scheduler::getScheduler()->getProcessor(tid)->goNewCo(func, stackSize);
 
 co_sleep()调用
-netco::Scheduler::getScheduler()->getProcessor(threadIdx)->wait(time);
+copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->wait(time);
 
 sche_join()调用
-netco::Scheduler::getScheduler()->join();
-netco::co_sleep(50);
+copnet::Scheduler::getScheduler()->join();
+copnet::co_sleep(50);
 
 ```
 

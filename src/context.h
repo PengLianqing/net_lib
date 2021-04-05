@@ -18,7 +18,7 @@
 #include "parameter.h"
 #include <ucontext.h>
 
-namespace netco
+namespace copnet
 {
 
     class Processor;

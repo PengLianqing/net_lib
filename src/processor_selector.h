@@ -16,7 +16,7 @@
 #pragma once
 #include <vector>
 
-namespace netco
+namespace copnet
 {
 	class Processor;
 

@@ -13,14 +13,14 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2021 Peng****************************
   */
-#include "../include/processor.h"
-#include "../include/parameter.h"
-#include "../include/spinlock_guard.h"
+#include "processor.h"
+#include "parameter.h"
+#include "spinlock_guard.h"
 
 #include <sys/epoll.h>
 #include <unistd.h>
 
-using namespace netco;
+using namespace copnet;
 
 __thread int threadIdx = -1;
 

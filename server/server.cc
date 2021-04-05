@@ -16,21 +16,20 @@
 #include <iostream>
 #include <sys/sysinfo.h>
 
-#include "../include/processor.h"
-#include "../include/netco_api.h"
-#include "../include/socket.h"
-#include "../include/mutex.h"
+#include "../src/processor.h"
+#include "../src/copnet_api.h"
+#include "../src/socket.h"
+#include "../src/mutex.h"
 
-using namespace netco;
+using namespace copnet;
 
 std::atomic_int32_t times(0);
-// netco http response with one acceptor test 
 // 只有一个acceptor的服务
 void single_acceptor_server_test()
 {
-	netco::co_go(
+	copnet::co_go(
 		[]{
-			netco::Socket listener;
+			copnet::Socket listener;
 			if (listener.isUseful()) // 判断socket是否有效
 			{
 				listener.setTcpNoDelay(true); // 设置socket的tcp协议不使用Nagle算法
@@ -42,24 +41,24 @@ void single_acceptor_server_test()
 				}
 				listener.listen(); // 监听
 			}
-			netco::co_go(
+			copnet::co_go(
 					[]
 					{
 						while(true){
 							std::cout << "connections:" << times.load() << std::endl;
-							netco::co_sleep(200);
+							copnet::co_sleep(200);
 						}
 					}
 			);
 			while(true)
 			{
-				netco::Socket* conn = new netco::Socket(listener.accept());
+				copnet::Socket* conn = new copnet::Socket(listener.accept());
 				conn->setTcpNoDelay(true);
 				times.fetch_add(1);
-				netco::co_go(
+				copnet::co_go(
 					[conn]
 					{
-						std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+						std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						char buf[1024];
 						/*
@@ -67,16 +66,16 @@ void single_acceptor_server_test()
 						while (conn->read((void*)buf, 1024) > 0)
 						{
 							++i;
-							// netco::co_sleep( rand()%1000 ); // 稍后回复
+							// copnet::co_sleep( rand()%1000 ); // 稍后回复
 							conn->send(hello.c_str(), hello.size());
-							netco::co_sleep(0);
+							copnet::co_sleep(0);
 							// std::cout << "messages:" << i << std::endl;
 						}
 						*/
 						if (conn->read((void*)buf, 1024) > 0)
 						{
 							conn->send(hello.c_str(), hello.size());
-							netco::co_sleep(50); // 等待，防止提前关闭socket
+							copnet::co_sleep(50); // 等待，防止提前关闭socket
 						}
 						delete conn;
 						times.fetch_sub(1);
@@ -87,7 +86,6 @@ void single_acceptor_server_test()
 	);
 }
 
-//netco http response with multi acceptor test 
 //每条线程一个acceptor的服务
 /*
 multi_acceptor_server_test函数执行逻辑：
@@ -106,10 +104,10 @@ void multi_acceptor_server_test()
 	// for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
 	for (int i = 0; i < 4; ++i) // 使用四线程测试
 	{
-		netco::co_go(
+		copnet::co_go(
 			[]
 			{
-				netco::Socket listener;
+				copnet::Socket listener;
 				if (listener.isUseful())
 				{
 					listener.setTcpNoDelay(true);
@@ -121,24 +119,24 @@ void multi_acceptor_server_test()
 					}
 					listener.listen();
 				}
-				netco::co_go(
+				copnet::co_go(
 					[]
 					{
 						while(true){
 							std::cout << "connections:" << times.load() << std::endl;
-							netco::co_sleep(200);
+							copnet::co_sleep(200);
 						}
 					}
 				);
 				while(true)
 				{
-					netco::Socket* conn = new netco::Socket(listener.accept());
+					copnet::Socket* conn = new copnet::Socket(listener.accept());
 					conn->setTcpNoDelay(true);
 					times.fetch_add(1);
-					netco::co_go(
+					copnet::co_go(
 						[conn]
 						{
-							std::string hello("HTTP/1.0 200 OK\r\nServer: netco/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							char buf[1024];
 							/*
@@ -146,16 +144,16 @@ void multi_acceptor_server_test()
 							while (conn->read((void*)buf, 1024) > 0)
 							{
 								++i;
-								// netco::co_sleep( rand()%1000 ); // 稍后回复
+								// copnet::co_sleep( rand()%1000 ); // 稍后回复
 								conn->send(hello.c_str(), hello.size());
-								netco::co_sleep(0);
+								copnet::co_sleep(0);
 								// std::cout << "messages:" << i << std::endl;
 							}
 							*/
 							if (conn->read((void*)buf, 1024) > 0)
 							{
 								conn->send(hello.c_str(), hello.size());
-								netco::co_sleep(50); // 等待，防止提前关闭socket
+								copnet::co_sleep(50); // 等待，防止提前关闭socket
 							}
 							delete conn;
 							times.fetch_sub(1);
@@ -186,8 +184,11 @@ sys     0m27.837s
 int main()
 {
 	// single_acceptor_server_test();
+
 	multi_acceptor_server_test();
-	netco::sche_join();
-	// std::cout << "end" << std::endl;
+
+	copnet::sche_join();
+
+	std::cout << "end" << std::endl;
 	return 0;
 }

@@ -17,7 +17,7 @@
 #include <type_traits>
 #include "mempool.h"
 
-namespace netco
+namespace copnet
 {
 
 	template<class T>
