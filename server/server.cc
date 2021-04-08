@@ -98,11 +98,30 @@ multi_acceptor_server_test函数执行逻辑：
 
 首先测试协程返回
 */
+/*
+问题原因：epoll_wait超高频次调用;
+bool Processor::loop()执行了八次，
+有八个神奇的东西被添加到了epoll，暂时还没找到哪的错误.
+在epoll中设置了remove和触发次数的统计。
+processor 的pLoop_ = new std::thread(也是在一直执行，有关联。
+::usleep(10*1000);
+std::cout<<times++<<","<<actEvNum<<std::endl;
+connections:0
+243,1
+244,1
+245,1
+246,1
+247,1
+有一个epoll监听对象一直在触发。
+*/
+/*
+下一个优化：sheduler中始终初始化的是8（核心数）的线程，优化到用户定义阶段。(实际可能只使用一个，考虑情况)
+*/
 void multi_acceptor_server_test()
 {
 	auto tCnt = ::get_nprocs_conf(); // 获取核心数
-	// for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
-	for (int i = 0; i < 4; ++i) // 使用四线程测试
+	//for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
+	for (int i = 0; i < 1; ++i) // 使用四线程测试
 	{
 		copnet::co_go(
 			[]
@@ -124,7 +143,7 @@ void multi_acceptor_server_test()
 					{
 						while(true){
 							std::cout << "connections:" << times.load() << std::endl;
-							copnet::co_sleep(200);
+							copnet::co_sleep(200); // 200ms
 						}
 					}
 				);
@@ -165,6 +184,26 @@ void multi_acceptor_server_test()
 	}
 }
 
+void test(){
+	copnet::co_go(
+		[]{
+			for(int j=0;j<20;++j){
+				std::cout << "new" << std::endl;
+				copnet::co_go(
+					[]
+					{
+						while(true){
+							static int i = 0;
+							// std::cout << "connections:" << times.load() << std::endl;
+							std::cout << "times" << ++i << std::endl;
+							copnet::co_sleep(200); // 200ms
+						}
+					}
+				);
+			}
+		}
+	);
+}
 /*
 单线程与多线程性能差距：
 测试场景：20000个连接，每个连接进行50次"ping"操作
@@ -186,6 +225,8 @@ int main()
 	// single_acceptor_server_test();
 
 	multi_acceptor_server_test();
+
+	// test();
 
 	copnet::sche_join();
 

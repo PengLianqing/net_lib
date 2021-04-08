@@ -116,6 +116,7 @@ void Processor::goCoBatch(std::vector<Coroutine*>& cos){
 	wakeUpEpoller();
 }
 
+#include <iostream>
 bool Processor::loop()
 {
 	//初始化Epoller
@@ -149,7 +150,6 @@ bool Processor::loop()
 				}
 				//获取活跃事件
 				epoller_.getActEvServ(parameter::epollTimeOutMs, actCoroutines_);
-
 				//处理超时协程 
 				timer_.getExpiredCoroutines(timerExpiredCo_);
 				size_t timerCoCnt = timerExpiredCo_.size();

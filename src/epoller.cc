@@ -81,9 +81,15 @@ bool Epoller::addEv(Coroutine* pCo, int fd, int interesEv)
 	return true;
 }
 
+/*
+	epoll 测试
+*/
+#include <iostream>
+static int times;
 //从Epoller中移除事件
 bool Epoller::removeEv(Coroutine* pCo, int fd, int interesEv)
 {
+	// std::cout<<"remove"<<std::endl;
 	if (!isEpollFdUseful())
 	{
 		return false;
@@ -106,6 +112,12 @@ int Epoller::getActEvServ(int timeOutMs, std::vector<Coroutine*>& activeEvServs)
 		return -1;
 	}
 	int actEvNum = ::epoll_wait(epollFd_, &*activeEpollEvents_.begin(), static_cast<int>(activeEpollEvents_.size()), timeOutMs);
+	
+	// ::usleep(10*1000);
+	// std::cout<<times++<<","<<actEvNum<<std::endl;
+	// if(++times%10000==0){
+	// 	std::cout<<times++<<std::endl;
+	// }
 	int savedErrno = errno;
 	if (actEvNum > 0)
 	{
