@@ -2,6 +2,7 @@
   ****************************(C) COPYRIGHT 2021 Peng****************************
   * @file       server.c/h
   * @brief      使用：export LD_LIBRARY_PATH=/home/peng/code/net_lib/src/
+				使用：sudo ./webbench -c 13000 -t 10  http://211.67.19.174:7103/
   * @note       
   * @history
   *  Version    Date            Author          Modification
@@ -41,6 +42,7 @@ void single_acceptor_server_test()
 				}
 				listener.listen(); // 监听
 			}
+
 			copnet::co_go(
 					[]
 					{
@@ -50,6 +52,7 @@ void single_acceptor_server_test()
 						}
 					}
 			);
+
 			while(true)
 			{
 				copnet::Socket* conn = new copnet::Socket(listener.accept());
@@ -117,11 +120,81 @@ connections:0
 /*
 下一个优化：sheduler中始终初始化的是8（核心数）的线程，优化到用户定义阶段。(实际可能只使用一个，考虑情况)
 */
+
+#include<thread>
+/*
+同一个线程创建的epoll
+140029574215488epollFd_ 3
+timerfd 4
+3 add fd 
+140029574215488epollFd_ 5
+timerfd 6
+5 add fd 
+140029574215488epollFd_ 7
+timerfd 8
+7 add fd 
+140029574215488epollFd_ 9
+timerfd 10
+9 add fd 
+3 add fd 
+5 add fd 
+7 add fd 
+来自两个线程的延时协程
+140029574211328connections:90
+ add fd 
+140029549033216connections:0
+140029549033216connections:0
+140029549033216connections:0
+来自两个线程的epoll始终有返回
+140029557425920 epoll 7 1000028 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 2000027 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 3000024 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 4000030 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 5000026 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 6000028 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 7000025 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 8000029 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 9000029 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029557425920 epoll 7 10000000 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 10000026 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 11000027 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 12000025 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+140029565818624 epoll 5 13000024 1
+16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+确定是线程调度问题。
+会创建1+2个线程，分别是2是初始化的processor中指定的线程数
+*/
 void multi_acceptor_server_test()
 {
 	auto tCnt = ::get_nprocs_conf(); // 获取核心数
-	//for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
-	for (int i = 0; i < 1; ++i) // 使用四线程测试
+	// for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
+
+	copnet::co_go(
+		[]
+		{
+			while(true){
+				std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
+				// std::cout << "connections:" << times.load() << std::endl;
+				copnet::co_sleep(5*100); // 200ms
+			}
+		}
+	,parameter::coroutineStackSize, -1);
+
+	for (int i = 0; i < 6; ++i) // 使用四线程测试
 	{
 		copnet::co_go(
 			[]
@@ -138,15 +211,8 @@ void multi_acceptor_server_test()
 					}
 					listener.listen();
 				}
-				copnet::co_go(
-					[]
-					{
-						while(true){
-							std::cout << "connections:" << times.load() << std::endl;
-							copnet::co_sleep(200); // 200ms
-						}
-					}
-				);
+
+
 				while(true)
 				{
 					copnet::Socket* conn = new copnet::Socket(listener.accept());
@@ -181,6 +247,7 @@ void multi_acceptor_server_test()
 				}
 			}
 			,parameter::coroutineStackSize, i);
+			// ,parameter::coroutineStackSize, 1);
 	}
 }
 

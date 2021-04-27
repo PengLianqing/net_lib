@@ -41,7 +41,8 @@ Scheduler::~Scheduler()
 
 bool Scheduler::startScheduler(int threadCnt)
 {
-	for (int i = 0; i < threadCnt; ++i)
+	// for (int i = 0; i < threadCnt; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		processors_.emplace_back(new Processor(i));
 		processors_[i]->loop();

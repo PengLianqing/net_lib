@@ -36,7 +36,7 @@ net lib by cpp
 | epoller.cc            | 封装epoll      | LT水平触发                     |
 | mstime.cc             | 时间           |                                |
 | mutex.cc              | 读写锁         | 通过原子变量和队列实现读写锁   |
-| copnet_api.cc          | api            |                                |
+| copnet_api.cc         | api            |                                |
 | processor.cc          | 线程           | 存放协程对象并管理其生命周期   |  |
 | processor_selector.cc | 协程分配策略   |                                |
 | scheduler.cc          | 协程分配       | 将协程分配到线程               |

@@ -119,22 +119,26 @@ void Processor::goCoBatch(std::vector<Coroutine*>& cos){
 #include <iostream>
 bool Processor::loop()
 {
-	//初始化Epoller
-	if (!epoller_.init())
-	{
-		return false;
-	}
-
-	//初始化Timer
-	if (!timer_.init(&epoller_))
-	{
-		return false;
-	}
-
+	
 	//初始化loop
 	pLoop_ = new std::thread(
 		[this]
 		{
+
+			//初始化Epoller
+			if (!epoller_.init())
+			{
+				return false;
+			}
+
+			//初始化Timer
+			if (!timer_.init(&epoller_))
+			{
+				return false;
+			}
+
+			std::cout << " init ok " << std::endl;
+
 			threadIdx = tid_;
 			status_ = PRO_RUNNING;
 			while (PRO_RUNNING == status_)

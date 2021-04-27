@@ -40,7 +40,7 @@ Timer::~Timer()
 bool Timer::init(Epoller* pEpoller)
 {
 	timeFd_ = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-	std::cout<<"timerfd"<<timeFd_<<std::endl;
+	std::cout << "timerfd " << timeFd_ << std::endl ;
 	if (isTimeFdUseful())
 	{
 		return pEpoller->addEv(nullptr, timeFd_, EPOLLIN | EPOLLPRI | EPOLLRDHUP);
@@ -50,6 +50,12 @@ bool Timer::init(Epoller* pEpoller)
 
 void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 {
+
+	/*
+		测试timefd的触发次数
+	*/
+	static long times = 0;
+
 	Time nowTime = Time::now();
 	// 将超时的事件弹出
 	while (!timerCoHeap_.empty() && timerCoHeap_.top().first <= nowTime)
@@ -64,6 +70,9 @@ void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 		while (cnt >= TIMER_DUMMYBUF_SIZE)
 		{
 			cnt = ::read(timeFd_, dummyBuf_, TIMER_DUMMYBUF_SIZE);
+			// if( ++times%10==0 ){ // 1000000
+			// 	std::cout << " time fd " << times++ << " " << cnt <<std::endl;
+			// }
 		}
 	}
 	// 更新定时器

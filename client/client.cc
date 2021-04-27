@@ -38,6 +38,7 @@ void client_test(){
 				copnet::co_go(
 					[ j ]
 					{
+						// ::sleep(1);
 						char buf[1024];
 						// std::cout<<j<<std::endl; // 协程的第j个连接
 						copnet::co_sleep(0); // 协程切换
