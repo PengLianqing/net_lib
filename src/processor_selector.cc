@@ -15,7 +15,7 @@
   */
 #include "processor_selector.h"
 #include "processor.h"
-
+#include <iostream>
 using namespace copnet;
 
 Processor* ProcessorSelector::next()
@@ -25,7 +25,8 @@ Processor* ProcessorSelector::next()
 	{
 		return nullptr;
 	}
-	int minCoProIdx = 0;
+	// 线程0不做安排
+	int minCoProIdx = 1;
 	size_t minCoCnt = processors_.front()->getCoCnt();
 	switch (strategy_)
 	{
@@ -47,9 +48,20 @@ Processor* ProcessorSelector::next()
 		++curPro_;
 		if (curPro_ >= n)
 		{
-			curPro_ = 0;
+			// 线程0不做安排
+			curPro_ = 1;
 		}
 		break;
 	}
+	// std::cout << " go to thread " << curPro_ << std::endl;
 	return processors_[curPro_];
 };
+
+void ProcessorSelector::printCoNums(){
+
+	int n = static_cast<int>(processors_.size());
+	for( int i=0;i<n;++i ){
+		size_t coCnt = processors_[i]->getCoCnt();
+		std::cout << coCnt << ",";
+	} std::cout << std::endl;
+}

@@ -45,6 +45,8 @@ namespace copnet
 
 		void join(); // 回收所有线程
 
+		void printCoNums();
+		
 	private:
 		//初始化Scheduler，threadCnt为开启几个线程
 		bool startScheduler(int threadCnt);

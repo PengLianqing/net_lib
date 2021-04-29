@@ -16,6 +16,9 @@
 #pragma once
 #include <stddef.h>
 
+// sys/sysinfo.h 查看核心数信息
+#include <sys/sysinfo.h>
+
 namespace copnet
 {
 	namespace parameter
@@ -34,6 +37,9 @@ namespace copnet
 
 		//内存池没有空闲内存块时申请memPoolMallocObjCnt个对象大小的内存块
 		static constexpr size_t memPoolMallocObjCnt = 40;
+
+		#define DEFINE_THREAD_NUMS 6
+		static int threadNums = DEFINE_THREAD_NUMS?DEFINE_THREAD_NUMS:(::get_nprocs_conf());
 	}
 	
 }

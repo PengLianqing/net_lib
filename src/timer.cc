@@ -50,7 +50,6 @@ bool Timer::init(Epoller* pEpoller)
 
 void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 {
-
 	/*
 		测试timefd的触发次数
 	*/
@@ -64,7 +63,7 @@ void Timer::getExpiredCoroutines(std::vector<Coroutine*>& expiredCoroutines)
 		timerCoHeap_.pop();
 	}
 	// 读完timeFd_来到的数据（epoll水平触发）
-	if (!expiredCoroutines.empty())
+	if ( 1 ) // !expiredCoroutines.empty()) // epoll 异常原因
 	{
 		ssize_t cnt = TIMER_DUMMYBUF_SIZE;
 		while (cnt >= TIMER_DUMMYBUF_SIZE)

@@ -41,8 +41,7 @@ Scheduler::~Scheduler()
 
 bool Scheduler::startScheduler(int threadCnt)
 {
-	// for (int i = 0; i < threadCnt; ++i)
-	for (int i = 0; i < 6; ++i)
+	for (int i = 0; i < threadCnt; ++i)
 	{
 		processors_.emplace_back(new Processor(i));
 		processors_[i]->loop();
@@ -59,7 +58,9 @@ Scheduler* Scheduler::getScheduler()
 		if (nullptr == pScher_)
 		{
 			pScher_ = new Scheduler();
-			pScher_->startScheduler(::get_nprocs_conf()); // 初始化pScher_
+
+			// 初始化线程数
+			pScher_->startScheduler( parameter::threadNums ); // 初始化pScher_
 		}
 	}
 	return pScher_;
@@ -73,6 +74,10 @@ void Scheduler::createNewCo(std::function<void()>&& func, size_t stackSize)
 void Scheduler::createNewCo(std::function<void()>& func, size_t stackSize)
 {
 	proSelector_.next()->goNewCo(func, stackSize);
+}
+
+void Scheduler::printCoNums(){
+	proSelector_.printCoNums();
 }
 
 void Scheduler::join()

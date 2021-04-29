@@ -30,6 +30,8 @@ namespace copnet
 	//若有4个处理器，则tid只有0 ~ 3是有效的 
 	void co_go(std::function<void()>& func, size_t stackSize = parameter::coroutineStackSize, int tid = -1);
 	void co_go(std::function<void()>&& func, size_t stackSize = parameter::coroutineStackSize, int tid = -1);
+	
+	void printCoNums();
 
 	//当前协程等待t毫秒后再继续执行
 	void co_sleep(Time t);

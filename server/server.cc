@@ -48,6 +48,10 @@ void single_acceptor_server_test()
 					{
 						while(true){
 							std::cout << "connections:" << times.load() << std::endl;
+
+							std::cout << " co nums :  " ;
+							printCoNums();
+
 							copnet::co_sleep(200);
 						}
 					}
@@ -177,6 +181,10 @@ timerfd 10
 
 确定是线程调度问题。
 会创建1+2个线程，分别是2是初始化的processor中指定的线程数
+
+单个线程开启epoll接收连接，然后其余线程的epoll只用于处理read、write、定时器事件。
+ 单接收下的问题解决了。多epoll接收存在问题。
+多个线程开启epoll接收连接，epoll都接收连接、处理连接。
 */
 void multi_acceptor_server_test()
 {
@@ -212,6 +220,7 @@ void multi_acceptor_server_test()
 					listener.listen();
 				}
 
+				std::cout << std::this_thread::get_id() << " running accept " << std::endl;
 
 				while(true)
 				{
@@ -221,6 +230,86 @@ void multi_acceptor_server_test()
 					copnet::co_go(
 						[conn]
 						{
+							std::cout << std::this_thread::get_id() << " running server " << std::endl;
+							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+							char buf[1024];
+							/*
+							int i = 0;
+							while (conn->read((void*)buf, 1024) > 0)
+							{
+								++i;
+								// copnet::co_sleep( rand()%1000 ); // 稍后回复
+								conn->send(hello.c_str(), hello.size());
+								copnet::co_sleep(0);
+								// std::cout << "messages:" << i << std::endl;
+							}
+							*/
+							if (conn->read((void*)buf, 1024) > 0)
+							{
+								conn->send(hello.c_str(), hello.size());
+								copnet::co_sleep(50); // 等待，防止提前关闭socket
+							}
+							delete conn;
+							times.fetch_sub(1);
+						}
+					);
+				}
+			}
+			,parameter::coroutineStackSize, i);
+			// ,parameter::coroutineStackSize, 1);
+	}
+}
+
+// 单epoll的多线程测试
+void smulti_acceptor_server_test()
+{
+	auto tCnt = parameter::threadNums; // 获取核心数
+	
+	copnet::co_go(
+		[]
+		{
+			while(true){
+				std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
+
+				std::cout << " co nums :  " ;
+				printCoNums();
+
+				// std::cout << "connections:" << times.load() << std::endl;
+				copnet::co_sleep(10*100); // 200ms
+			}
+		}
+	,parameter::coroutineStackSize, 0);
+
+	for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
+	{
+		copnet::co_go(
+			[]
+			{
+				copnet::Socket listener;
+				if (listener.isUseful())
+				{
+					listener.setTcpNoDelay(true);
+					listener.setReuseAddr(true);
+					listener.setReusePort(true);
+					if (listener.bind(7103) < 0)
+					{
+						return;
+					}
+					listener.listen();
+				}
+
+				// std::cout << std::this_thread::get_id() << " running accept " << std::endl;
+
+				while(true)
+				{
+					copnet::Socket* conn = new copnet::Socket(listener.accept());
+					conn->setTcpNoDelay(true);
+					times.fetch_add(1);
+					copnet::co_go(
+						[conn]
+						{
+							// std::cout << std::this_thread::get_id() << " running server " << std::endl;
 							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							char buf[1024];
@@ -291,8 +380,10 @@ int main()
 {
 	// single_acceptor_server_test();
 
-	multi_acceptor_server_test();
-
+	// multi_acceptor_server_test();
+	
+	smulti_acceptor_server_test();
+	
 	// test();
 
 	copnet::sche_join();

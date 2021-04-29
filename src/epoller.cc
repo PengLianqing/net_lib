@@ -159,9 +159,9 @@ int Epoller::getActEvServ(int timeOutMs, std::vector<Coroutine*>& activeEvServs)
 	{
 		return -1;
 	}
-	// int actEvNum = ::epoll_wait(epollFd_, &*activeEpollEvents_.begin(), static_cast<int>(activeEpollEvents_.size()), timeOutMs);
+	int actEvNum = ::epoll_wait(epollFd_, &*activeEpollEvents_.begin(), static_cast<int>(activeEpollEvents_.size()), timeOutMs);
 	
-	int actEvNum = ::epoll_wait(epollFd_, & activeEpollEvents_[0], static_cast<int>(activeEpollEvents_.size()), timeOutMs);
+	// int actEvNum = ::epoll_wait(epollFd_, & activeEpollEvents_[0], static_cast<int>(activeEpollEvents_.size()), timeOutMs);
 	
 	// ::usleep(10*1000);
 	// std::cout<<times++<<","<<actEvNum<<std::endl;
@@ -177,15 +177,15 @@ int Epoller::getActEvServ(int timeOutMs, std::vector<Coroutine*>& activeEvServs)
 		此处为了观察添加了延时，会影响并发性能。
 		********/
 		// ::usleep(10); 
-		if( ++times%1000000==0 ){ // 1000000
-			std::cout  << std::this_thread::get_id() << " epoll " << epollFd_ << " " << times++ << " " << actEvNum << std::endl; 
+		// if( ++times%1000000==0 || actEvNum>2 ){ // 1000000
+		// 	std::cout  << std::this_thread::get_id() << " epoll " << epollFd_ << " " << times++ << " " << actEvNum << std::endl; 
 
-			// std::cout << activeEpollEvents_.size() << "," ;
-			// for(auto elem:activeEpollEvents_){
-			// 	std::cout << elem.data.fd << ",";
-			// }
-			// std::cout << std::endl;
-		}
+		// 	// std::cout << activeEpollEvents_.size() << "," ;
+		// 	// for(auto elem:activeEpollEvents_){
+		// 	// 	std::cout << elem.data.fd << ",";
+		// 	// }
+		// 	// std::cout << std::endl;
+		// }
 	
 		if (actEvNum > static_cast<int>(activeEpollEvents_.size()))
 		{

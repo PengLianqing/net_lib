@@ -15,7 +15,7 @@
   */
 #pragma once
 #include <vector>
-
+#include <iostream>
 namespace copnet
 {
 	class Processor;
@@ -30,7 +30,7 @@ namespace copnet
 	class ProcessorSelector
 	{
 	public:
-		ProcessorSelector(std::vector<Processor*>& processors, int strategy = MIN_EVENT_FIRST) :  curPro_(-1) , strategy_(strategy) , processors_(processors) {}
+		ProcessorSelector(std::vector<Processor*>& processors, int strategy = ROUND_ROBIN) :  curPro_(-1) , strategy_(strategy) , processors_(processors) {}
 		~ProcessorSelector() {}
 
 		//设置分发任务的策略
@@ -39,6 +39,8 @@ namespace copnet
 		inline void setStrategy(int strategy) { strategy_ = strategy; };
 
 		Processor* next();
+
+		void printCoNums();
 
 	private:
 		int curPro_; // 事件管理器数组的下标
