@@ -42,48 +42,6 @@ Epoller::~Epoller()
 	}
 };
 
-/*
-
-140201624086336epollFd_ 3
-timerfd 4
-3 add fd 
-140201624086336epollFd_ 5
-timerfd 6
-5 add fd 
-140201624086336epollFd_ 7
-timerfd 8
-7 add fd 
-140201624086336epollFd_ 9
-timerfd 10
-9 add fd 
-3 add fd 
-5 add fd 
-7 add fd 
-connections:0
-9 add fd 
-connections:0
-connections:0
-connections:0
-140201607296768 epoll 7 1000031 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 2000030 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 3000028 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201615689472 epoll 5 4000029 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 5000030 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201615689472 epoll 5 6000026 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 7000028 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 8000027 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140201607296768 epoll 7 9000030 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-
-*/
 bool Epoller::init()
 {
 	// epoll_create1() 使用FD_CLOEXEC实现close-on-exec，关闭子进程无用文件描述符
@@ -91,7 +49,7 @@ bool Epoller::init()
 	// https://blog.csdn.net/ChrisNiu1984/article/details/7050663
 	epollFd_ = ::epoll_create1(EPOLL_CLOEXEC);
 	// epollFd_ = ::epoll_create(activeEpollEvents_.size()+1);
-	std::cout << std::this_thread::get_id() << "epollFd_ " << epollFd_ << std::endl;
+	// std::cout << std::this_thread::get_id() << "epollFd_ " << epollFd_ << std::endl;
 	return isEpollFdUseful();
 }
 
@@ -113,11 +71,9 @@ bool Epoller::modifyEv(Coroutine* pCo, int fd, int interesEv)
 	return true;
 }
 
-#include <iostream>
 //向Epoller中添加事件
 bool Epoller::addEv(Coroutine* pCo, int fd, int interesEv)
 {
-	// std::cout << epollFd_ << " add fd " << std::endl;
 	if (!isEpollFdUseful())
 	{
 		return false;
@@ -133,11 +89,9 @@ bool Epoller::addEv(Coroutine* pCo, int fd, int interesEv)
 	return true;
 }
 
-static int times;
 //从Epoller中移除事件
 bool Epoller::removeEv(Coroutine* pCo, int fd, int interesEv)
 {
-	// std::cout<<"remove"<<std::endl;
 	if (!isEpollFdUseful())
 	{
 		return false;
@@ -161,32 +115,9 @@ int Epoller::getActEvServ(int timeOutMs, std::vector<Coroutine*>& activeEvServs)
 	}
 	int actEvNum = ::epoll_wait(epollFd_, &*activeEpollEvents_.begin(), static_cast<int>(activeEpollEvents_.size()), timeOutMs);
 	
-	// int actEvNum = ::epoll_wait(epollFd_, & activeEpollEvents_[0], static_cast<int>(activeEpollEvents_.size()), timeOutMs);
-	
-	// ::usleep(10*1000);
-	// std::cout<<times++<<","<<actEvNum<<std::endl;
-	
-	// if( ++times%1000000==0 ){
-	//  	std::cout<<times++<<" " <<actEvNum<<std::endl;
-	// }
-
 	int savedErrno = errno;
 	if (actEvNum > 0)
 	{
-		/*******
-		此处为了观察添加了延时，会影响并发性能。
-		********/
-		// ::usleep(10); 
-		// if( ++times%1000000==0 || actEvNum>2 ){ // 1000000
-		// 	std::cout  << std::this_thread::get_id() << " epoll " << epollFd_ << " " << times++ << " " << actEvNum << std::endl; 
-
-		// 	// std::cout << activeEpollEvents_.size() << "," ;
-		// 	// for(auto elem:activeEpollEvents_){
-		// 	// 	std::cout << elem.data.fd << ",";
-		// 	// }
-		// 	// std::cout << std::endl;
-		// }
-	
 		if (actEvNum > static_cast<int>(activeEpollEvents_.size()))
 		{
 			return savedErrno;

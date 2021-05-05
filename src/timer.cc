@@ -40,7 +40,7 @@ Timer::~Timer()
 bool Timer::init(Epoller* pEpoller)
 {
 	timeFd_ = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-	std::cout << "timerfd " << timeFd_ << std::endl ;
+	// std::cout << "timerfd " << timeFd_ << std::endl ;
 	if (isTimeFdUseful())
 	{
 		return pEpoller->addEv(nullptr, timeFd_, EPOLLIN | EPOLLPRI | EPOLLRDHUP);

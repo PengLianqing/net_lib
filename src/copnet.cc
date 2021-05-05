@@ -15,6 +15,11 @@
   */
 #include "copnet_api.h"
 
+/**
+  * @brief          co_go 运行协程.
+  * 不指定tid(-1)时,默认通过ProcessorSelector选择线程运行协程,指定tid时运行到指定的线程;
+  * stackSize默认为(32*1024).
+  */
 void copnet::co_go(std::function<void()>&& func, size_t stackSize, int tid)
 {
 	if (tid < 0)
@@ -41,58 +46,26 @@ void copnet::co_go(std::function<void()>& func, size_t stackSize, int tid)
 	}
 }
 
+/**
+  * @brief          printCoNums 获取各个线程运行的协程数.
+  */
 void copnet::printCoNums()
 {
 	copnet::Scheduler::getScheduler()->printCoNums();
 }
 
-// #include <iostream>
-// void copnet::co_go(std::function<void()>&& func, size_t stackSize, int tid)
-// {
-// 	if (tid < 0)
-// 	{
-// 		copnet::Scheduler::getScheduler()->createNewCo(std::move(func), stackSize);
-// 		// std::cout << " go to thread " << 0 << std::endl;
-// 		// copnet::Scheduler::getScheduler()->getProcessor(0)->goNewCo(func, stackSize);
-// 	}
-// 	else if(tid == 0){
-// 		// std::cout << " go to thread " << 0 << std::endl;
-// 		copnet::Scheduler::getScheduler()->getProcessor(0)->goNewCo(func, stackSize);
-// 	}
-// 	else
-// 	{
-// 		tid %= 5;
-// 		// std::cout << " go to thread " << tid+1 << std::endl;
-// 		copnet::Scheduler::getScheduler()->getProcessor(tid+1)->goNewCo(std::move(func), stackSize);
-// 	}
-// }
-
-// void copnet::co_go(std::function<void()>& func, size_t stackSize, int tid)
-// {
-// 	if (tid < 0)
-// 	{
-// 		copnet::Scheduler::getScheduler()->createNewCo(func, stackSize);
-// 		// std::cout << " go to thread " << 0 << std::endl;
-// 		// copnet::Scheduler::getScheduler()->getProcessor(0)->goNewCo(func, stackSize);
-// 	}
-// 	else if(tid == 0){
-// 		// std::cout << " go to thread " << 0 << std::endl;
-// 		copnet::Scheduler::getScheduler()->getProcessor(0)->goNewCo(func, stackSize);
-// 	}
-// 	else
-// 	{
-// 		// tid %= copnet::Scheduler::getScheduler()->getProCnt();
-// 		tid %= 5;
-// 		// std::cout << " go to thread " << tid+1 << std::endl;
-// 		copnet::Scheduler::getScheduler()->getProcessor(tid+1)->goNewCo(func, stackSize);
-// 	}
-// }
-
+/**
+  * @brief          co_sleep 协程休眠指定时间(ms).
+  * 通过timefd和epoll实现定时.
+  */
 void copnet::co_sleep(Time time)
 {
 	copnet::Scheduler::getScheduler()->getProcessor(threadIdx)->wait(time);
 }
 
+/**
+  * @brief          sche_join 回收线程资源.
+  */
 void copnet::sche_join()
 {
 	copnet::Scheduler::getScheduler()->join();

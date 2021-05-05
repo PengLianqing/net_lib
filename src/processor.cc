@@ -135,8 +135,6 @@ bool Processor::loop()
 				return false;
 			}
 
-			std::cout << " init ok " << std::endl;
-
 			threadIdx = tid_;
 			status_ = PRO_RUNNING;
 			while (PRO_RUNNING == status_)
@@ -204,105 +202,6 @@ bool Processor::loop()
 		);
 	return true;
 }
-
-// bool Processor::loop()
-// {
-	
-// 	//初始化loop
-// 	pLoop_ = new std::thread(
-// 		[this]
-// 		{
-
-// 			if( this->tid_ == 0 ){
-// 				//初始化Epoller
-// 				if (!epoller_.init())
-// 				{
-// 					return false;
-// 				}
-
-// 				//初始化Timer
-// 				if (!timer_.init(&epoller_))
-// 				{
-// 					return false;
-// 				}
-// 			}
-			
-// 			std::cout << " init ok " << std::endl;
-
-// 			threadIdx = tid_;
-// 			status_ = PRO_RUNNING;
-// 			while (PRO_RUNNING == status_)
-// 			{
-// 				//清空所有列表
-// 				if (actCoroutines_.size())
-// 				{
-// 					actCoroutines_.clear();
-// 				}
-// 				if (timerExpiredCo_.size())
-// 				{
-// 					timerExpiredCo_.clear();
-// 				}
-
-// 				if( this->tid_ == 0 ){
-// 					//获取活跃事件
-// 					epoller_.getActEvServ(parameter::epollTimeOutMs, actCoroutines_);
-
-// 					//执行被唤醒的协程
-// 					size_t actCoCnt = actCoroutines_.size();
-// 					for (size_t i = 0; i < actCoCnt; ++i)
-// 					{
-// 						resume(actCoroutines_[i]);
-// 					}
-// 				}
-// 				else{
-// 					//处理超时协程 
-// 					timer_.getExpiredCoroutines(timerExpiredCo_);
-// 					size_t timerCoCnt = timerExpiredCo_.size();
-// 					for (size_t i = 0; i < timerCoCnt; ++i)
-// 					{
-// 						resume(timerExpiredCo_[i]);
-// 					}
-
-// 					//执行新来的协程
-// 					Coroutine* pNewCo = nullptr;
-// 					int runningQue = runningNewQue_;
-					
-// 					while (!newCoroutines_[runningQue].empty())
-// 					{
-// 						{
-// 							pNewCo = newCoroutines_[runningQue].front();
-// 							newCoroutines_[runningQue].pop();
-// 							coSet_.insert(pNewCo);
-// 						}
-// 						resume(pNewCo);
-// 					}
-
-// 					{
-// 						SpinlockGuard lock(newQueLock_);
-// 						runningNewQue_ = !runningQue;
-// 					}
-
-					
-
-// 					//清除已经执行完毕的协程
-// 					for (auto deadCo : removedCo_)
-// 					{
-// 						coSet_.erase(deadCo);
-// 						//delete deadCo;
-// 						{
-// 							SpinlockGuard lock(coPoolLock_);
-// 							coPool_.delete_obj(deadCo);
-// 						}
-// 					}
-// 					removedCo_.clear();
-// 				}
-
-// 			}
-// 			status_ = PRO_STOPPED;
-// 		}
-// 		);
-// 	return true;
-// }
 
 //等待fd上的ev事件返回
 void Processor::waitEvent(int fd, int ev){

@@ -25,11 +25,25 @@
 using namespace copnet;
 
 std::atomic_int32_t times(0);
+
 // 只有一个acceptor的服务
 void single_acceptor_server_test()
 {
 	copnet::co_go(
 		[]{
+
+			copnet::co_go(
+			[]
+			{
+				while(true){
+					// std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
+					printCoNums();
+					std::cout << "connections:" << times.load() << std::endl;
+					copnet::co_sleep(1*1000); // 200ms
+				}
+			}
+			,parameter::coroutineStackSize, 0);
+		
 			copnet::Socket listener;
 			if (listener.isUseful()) // 判断socket是否有效
 			{
@@ -43,20 +57,6 @@ void single_acceptor_server_test()
 				listener.listen(); // 监听
 			}
 
-			copnet::co_go(
-					[]
-					{
-						while(true){
-							std::cout << "connections:" << times.load() << std::endl;
-
-							std::cout << " co nums :  " ;
-							printCoNums();
-
-							copnet::co_sleep(200);
-						}
-					}
-			);
-
 			while(true)
 			{
 				copnet::Socket* conn = new copnet::Socket(listener.accept());
@@ -65,20 +65,10 @@ void single_acceptor_server_test()
 				copnet::co_go(
 					[conn]
 					{
-						std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+						std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: \
+							text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 						char buf[1024];
-						/*
-						int i = 0;
-						while (conn->read((void*)buf, 1024) > 0)
-						{
-							++i;
-							// copnet::co_sleep( rand()%1000 ); // 稍后回复
-							conn->send(hello.c_str(), hello.size());
-							copnet::co_sleep(0);
-							// std::cout << "messages:" << i << std::endl;
-						}
-						*/
 						if (conn->read((void*)buf, 1024) > 0)
 						{
 							conn->send(hello.c_str(), hello.size());
@@ -93,176 +83,7 @@ void single_acceptor_server_test()
 	);
 }
 
-//每条线程一个acceptor的服务
-/*
-multi_acceptor_server_test函数执行逻辑：
-程序开始，获取核心数，根据核心数创建协程，返回“#########return ”
-其实执行到#########return 的时候已经交给sheduler托管了
-
-无连接的时候会炸cpu，因为此时频繁进行协程切换（accept没有反应，切换上下文，继续没有反应，继续切换上下文） 需要优化
-有accept后，cpu不会爆炸(最起码accept有问题)
-但是感觉协程并没有成功回收。->找到协程在哪里显示数量显示一下，时间函数。
-
-首先测试协程返回
-*/
-/*
-问题原因：epoll_wait超高频次调用;
-bool Processor::loop()执行了八次，
-有八个神奇的东西被添加到了epoll，暂时还没找到哪的错误.
-在epoll中设置了remove和触发次数的统计。
-processor 的pLoop_ = new std::thread(也是在一直执行，有关联。
-::usleep(10*1000);
-std::cout<<times++<<","<<actEvNum<<std::endl;
-connections:0
-243,1
-244,1
-245,1
-246,1
-247,1
-有一个epoll监听对象一直在触发。
-*/
-/*
-下一个优化：sheduler中始终初始化的是8（核心数）的线程，优化到用户定义阶段。(实际可能只使用一个，考虑情况)
-*/
-
-#include<thread>
-/*
-同一个线程创建的epoll
-140029574215488epollFd_ 3
-timerfd 4
-3 add fd 
-140029574215488epollFd_ 5
-timerfd 6
-5 add fd 
-140029574215488epollFd_ 7
-timerfd 8
-7 add fd 
-140029574215488epollFd_ 9
-timerfd 10
-9 add fd 
-3 add fd 
-5 add fd 
-7 add fd 
-来自两个线程的延时协程
-140029574211328connections:90
- add fd 
-140029549033216connections:0
-140029549033216connections:0
-140029549033216connections:0
-来自两个线程的epoll始终有返回
-140029557425920 epoll 7 1000028 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 2000027 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 3000024 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 4000030 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 5000026 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 6000028 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 7000025 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 8000029 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 9000029 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029557425920 epoll 7 10000000 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 10000026 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 11000027 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 12000025 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-140029565818624 epoll 5 13000024 1
-16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-
-确定是线程调度问题。
-会创建1+2个线程，分别是2是初始化的processor中指定的线程数
-
-单个线程开启epoll接收连接，然后其余线程的epoll只用于处理read、write、定时器事件。
- 单接收下的问题解决了。多epoll接收存在问题。
-多个线程开启epoll接收连接，epoll都接收连接、处理连接。
-*/
 void multi_acceptor_server_test()
-{
-	auto tCnt = ::get_nprocs_conf(); // 获取核心数
-	// for (int i = 0; i < tCnt; ++i) // 每个核心建立一个线程执行accept
-
-	copnet::co_go(
-		[]
-		{
-			while(true){
-				std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
-				// std::cout << "connections:" << times.load() << std::endl;
-				copnet::co_sleep(5*100); // 200ms
-			}
-		}
-	,parameter::coroutineStackSize, -1);
-
-	for (int i = 0; i < 6; ++i) // 使用四线程测试
-	{
-		copnet::co_go(
-			[]
-			{
-				copnet::Socket listener;
-				if (listener.isUseful())
-				{
-					listener.setTcpNoDelay(true);
-					listener.setReuseAddr(true);
-					listener.setReusePort(true);
-					if (listener.bind(7103) < 0)
-					{
-						return;
-					}
-					listener.listen();
-				}
-
-				std::cout << std::this_thread::get_id() << " running accept " << std::endl;
-
-				while(true)
-				{
-					copnet::Socket* conn = new copnet::Socket(listener.accept());
-					conn->setTcpNoDelay(true);
-					times.fetch_add(1);
-					copnet::co_go(
-						[conn]
-						{
-							std::cout << std::this_thread::get_id() << " running server " << std::endl;
-							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
-							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
-							char buf[1024];
-							/*
-							int i = 0;
-							while (conn->read((void*)buf, 1024) > 0)
-							{
-								++i;
-								// copnet::co_sleep( rand()%1000 ); // 稍后回复
-								conn->send(hello.c_str(), hello.size());
-								copnet::co_sleep(0);
-								// std::cout << "messages:" << i << std::endl;
-							}
-							*/
-							if (conn->read((void*)buf, 1024) > 0)
-							{
-								conn->send(hello.c_str(), hello.size());
-								copnet::co_sleep(50); // 等待，防止提前关闭socket
-							}
-							delete conn;
-							times.fetch_sub(1);
-						}
-					);
-				}
-			}
-			,parameter::coroutineStackSize, i);
-			// ,parameter::coroutineStackSize, 1);
-	}
-}
-
-// 单epoll的多线程测试
-void smulti_acceptor_server_test()
 {
 	auto tCnt = parameter::threadNums; // 获取核心数
 	
@@ -270,13 +91,10 @@ void smulti_acceptor_server_test()
 		[]
 		{
 			while(true){
-				std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
-
-				std::cout << " co nums :  " ;
+				// std::cout << std::this_thread::get_id() << " running timefd " << std::endl;
 				printCoNums();
-
-				// std::cout << "connections:" << times.load() << std::endl;
-				copnet::co_sleep(10*100); // 200ms
+				std::cout << "connections:" << times.load() << std::endl;
+				copnet::co_sleep(1*1000); // 200ms
 			}
 		}
 	,parameter::coroutineStackSize, 0);
@@ -299,8 +117,6 @@ void smulti_acceptor_server_test()
 					listener.listen();
 				}
 
-				// std::cout << std::this_thread::get_id() << " running accept " << std::endl;
-
 				while(true)
 				{
 					copnet::Socket* conn = new copnet::Socket(listener.accept());
@@ -310,20 +126,11 @@ void smulti_acceptor_server_test()
 						[conn]
 						{
 							// std::cout << std::this_thread::get_id() << " running server " << std::endl;
-							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
+
+							std::string hello("HTTP/1.0 200 OK\r\nServer: copnet/0.1.0\r\nContent-Length: 72\r\nContent-Type: \
+								text/html\r\n\r\n<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							// std::string hello("<HTML><TITLE>hello</TITLE>\r\n<BODY><P>hello word!\r\n</BODY></HTML>\r\n");
 							char buf[1024];
-							/*
-							int i = 0;
-							while (conn->read((void*)buf, 1024) > 0)
-							{
-								++i;
-								// copnet::co_sleep( rand()%1000 ); // 稍后回复
-								conn->send(hello.c_str(), hello.size());
-								copnet::co_sleep(0);
-								// std::cout << "messages:" << i << std::endl;
-							}
-							*/
 							if (conn->read((void*)buf, 1024) > 0)
 							{
 								conn->send(hello.c_str(), hello.size());
@@ -336,58 +143,67 @@ void smulti_acceptor_server_test()
 				}
 			}
 			,parameter::coroutineStackSize, i);
-			// ,parameter::coroutineStackSize, 1);
 	}
 }
 
-void test(){
-	copnet::co_go(
-		[]{
-			for(int j=0;j<20;++j){
-				std::cout << "new" << std::endl;
-				copnet::co_go(
-					[]
-					{
-						while(true){
-							static int i = 0;
-							// std::cout << "connections:" << times.load() << std::endl;
-							std::cout << "times" << ++i << std::endl;
-							copnet::co_sleep(200); // 200ms
-						}
-					}
-				);
-			}
-		}
-	);
-}
 /*
-单线程与多线程性能差距：
-测试场景：20000个连接，每个连接进行50次"ping"操作
-peng@ubuntu:~/code/net_lib/client$ time ./client 
-all done. times:20000
 
-real    0m8.604s
-user    0m2.016s
-sys     0m16.169s
-peng@ubuntu:~/code/net_lib/client$ time ./client 
-all done. times:20000
+* 性能测试：
 
-real    0m17.610s
-user    0m6.888s
-sys     0m27.837s
+	多线程epoll接收：
+	peng@ubuntu:~/code/net_lib/webbench/webbench-1.5$ ./webbench -c 5000 -t 10  http://211.67.19.174:7103/
+	Webbench - Simple Web Benchmark 1.5
+	Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+	Benchmarking: GET http://211.67.19.174:7103/
+	5000 clients, running 10 sec.
+	Speed=5351238 pages/min, 13623638 bytes/sec.
+	Requests: 891873 susceed, 0 failed.
+
+	单线程epoll接收：
+	peng@ubuntu:~/code/net_lib/webbench/webbench-1.5$ ./webbench -c 5000 -t 10  http://211.67.19.174:7103/
+	Webbench - Simple Web Benchmark 1.5
+	Copyright (c) Radim Kolar 1997-2004, GPL Open Source Software.
+	Benchmarking: GET http://211.67.19.174:7103/
+	5000 clients, running 10 sec.
+	Speed=4546818 pages/min, 11590319 bytes/sec.
+	Requests: 757803 susceed, 0 failed.
+
+* 性能对比：
+
+	优化前：CPU占用异常，且性能：
+	单线程epoll接收（16线程处理）：
+	Speed=2719266 pages/min, 5954065 bytes/sec.
+	Requests: 453211 susceed, 0 failed.
+	多（16）线程epoll接收（16线程处理）：
+	Speed=4921068 pages/min, 12443880 bytes/sec.
+	Requests: 820178 susceed, 0 failed.
+
+	优化后：CPU占用正常，且性能：
+	单线程epoll接收（8线程处理）：
+	Speed=4546818 pages/min, 11590319 bytes/sec.
+	Requests: 757803 susceed, 0 failed.
+	多（8）线程epoll接收（8线程处理）：
+	Speed=5351238 pages/min, 13623638 bytes/sec.
+	Requests: 891873 susceed, 0 failed.
+
+	单线程epoll接收（16线程处理）：
+	Speed=5060610 pages/min, 12885754 bytes/sec.
+	Requests: 843435 susceed, 0 failed.
+	多（16）线程epoll接收（16线程处理）：
+	Speed=5385486 pages/min, 13704867 bytes/sec.
+	Requests: 897581 susceed, 0 failed.
+
 */
+
 int main()
 {
-	// single_acceptor_server_test();
+	single_acceptor_server_test();
 
 	// multi_acceptor_server_test();
-	
-	smulti_acceptor_server_test();
-	
-	// test();
 
-	copnet::sche_join();
+	copnet::sche_join(); // 回收线程
 
 	std::cout << "end" << std::endl;
+
 	return 0;
 }

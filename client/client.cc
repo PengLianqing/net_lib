@@ -26,11 +26,11 @@
 using namespace copnet;
 
 /**
-  * @brief          client_test
-  * 使用四线程+协程调度测试服务器端性能
+  * @brief          client_test 测试server
   */
 std::atomic_int32_t times(0);
 void client_test(){
+
 	for(int i=0;i<2;++i){
 		copnet::co_go(
 		[i]{
@@ -38,10 +38,8 @@ void client_test(){
 				copnet::co_go(
 					[ j ]
 					{
-						// ::sleep(1);
 						char buf[1024];
-						// std::cout<<j<<std::endl; // 协程的第j个连接
-						copnet::co_sleep(0); // 协程切换
+						// std::cout << j << std::endl; // 协程的第j个连接
 						copnet::Socket s;
 						s.connect("127.0.0.1", 7103);
 						for(int k=50;k>0;--k){
@@ -51,7 +49,6 @@ void client_test(){
 							copnet::co_sleep(0);//需要等一下，否则还没发送完毕就关闭了
 						}
 						times.fetch_add(1);
-						// std::cout<<times.load()<<std::endl;
 					} 
 				);
 			}
@@ -61,7 +58,7 @@ void client_test(){
 
 	while( times.load()<20000 )
 	{
-		::sleep(0);
+		::usleep(10);
 	}
 	std::cout  << "all done. times:" << times.load() << std::endl;
 }
@@ -70,11 +67,10 @@ void client_test(){
 int main()
 {
 	client_test();
-
-	// std::this_thread::sleep_for( std::chrono::milliseconds(10000) );
-
-	// copnet::sche_join();
 	
 	std::cout << "end" << std::endl;
+
+	// copnet::sche_join();
+
 	return 0;
 }

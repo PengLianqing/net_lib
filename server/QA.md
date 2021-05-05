@@ -1,13 +1,3 @@
-// ::usleep(10*1000);
-// std::cout<<times++<<","<<actEvNum<<std::endl;
-
-// if( ++times%1000000==0 ){
-    std::cout<<times++<<" " <<actEvNum<<std::endl;
-// }
-感觉问题应该出在timefd上。
-
-添加超时，epoll lt
-
 # pqs限流算法
 
 封装了一个类，通过pass函数来实现pqs限流。
